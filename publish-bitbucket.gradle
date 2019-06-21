@@ -1,0 +1,40 @@
+apply plugin: 'maven'
+
+repositories {
+    maven { url "https://raw.github.com/synergian/wagon-git/releases" }
+}
+
+configurations {
+    deployLibrary
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    deployLibrary "ar.com.synergian:wagon-git:0.2.5"
+}
+
+uploadArchives {
+    dependsOn build
+    configuration = configurations.archives
+
+    repositories.mavenDeployer {
+        configuration = configurations.deployLibrary
+        def GIT_URL = 'git:releases://https://bitbucket.org/' + COMPANY + '/' + REPOSITORY_NAME + '.git'
+        repository(url: GIT_URL)
+        println("GIT URL: " + GIT_URL)
+        // uniqueVersion = true
+
+        pom.project {
+            groupId = ARTIFACT_PACKAGE
+            version = ARTIFACT_VERSION
+            artifactId = ARTIFACT_NAME
+            packaging ARTIFACT_PACKAGING
+        }
+    }
+}
+
+def getBase64EncodedCredentials() {
+    def s = USERNAME + ":" + PASSWORD;
+    return s.bytes.encodeBase64().toString()
+}
